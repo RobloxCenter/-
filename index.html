@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Global Clicker</title>
+    <style>
+        body {
+            background-color: #1e1e1e;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        #game-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: opacity 0.5s;
+        }
+
+        #end-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 1s forwards;
+        }
+
+        #click-btn {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ff6b6b, #ee5253);
+            border: 5px solid #fff;
+            box-shadow: 0 0 20px rgba(238, 82, 83, 0.6);
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            -webkit-tap-highlight-color: transparent;
+            margin-bottom: 30px;
+        }
+
+        #click-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 10px rgba(238, 82, 83, 0.8);
+        }
+
+        .counter-text {
+            font-size: 3rem;
+            font-weight: bold;
+        }
+
+        .goal-text {
+            font-size: 1rem;
+            color: #aaa;
+            margin-top: 10px;
+        }
+
+        .final-message {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            padding: 0 20px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+
+    <div id="game-screen">
+        <div id="click-btn"></div>
+        <div class="counter-text" id="counter">0</div>
+        <div class="goal-text">Цель: 820 000</div>
+    </div>
+
+    <div id="end-screen">
+        <div class="final-message">Глор обязан сделать бота!</div>
+        <div class="counter-text" id="final-counter">820000</div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const GOAL = 820000;
+        
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const btn = document.getElementById('click-btn');
+        const counterDisplay = document.getElementById('counter');
+        const finalCounterDisplay = document.getElementById('final-counter');
+
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws`;
+        const ws = new WebSocket(wsUrl);
+
+        function showVictory(score) {
+            gameScreen.classList.add('hidden');
+            endScreen.style.display = 'flex';
+            finalCounterDisplay.innerText = score.toLocaleString();
+        }
+
+        btn.addEventListener('click', () => {
+            tg.HapticFeedback.impactOccurred('medium');
+            ws.send("click");
+        });
+
+        ws.onmessage = (event) => {
+            const currentCount = parseInt(event.data);
+            counterDisplay.innerText = currentCount.toLocaleString();
+
+            if (currentCount >= GOAL) {
+                showVictory(currentCount);
+            }
+        };
+    </script>
+</body>
+</html>
